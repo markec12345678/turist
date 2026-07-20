@@ -1,0 +1,520 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  RECEPTIONIST
+  CHEF
+  WAITER
+  CLEANER
+  CASHIER
+  MANAGER
+  STAFF
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  CLEANING
+  INSPECTION
+  OUT_OF_ORDER
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentType {
+  CASH
+  CARD
+  STRIPE
+  VOUCHER
+  TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum OrderStatus {
+  OPEN
+  SUBMITTED
+  PREPARING
+  READY
+  SERVED
+  CLOSED
+  CANCELLED
+}
+
+enum OrderType {
+  DINE_IN
+  TAKEAWAY
+  DELIVERY
+}
+
+enum HousekeepingStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum HousekeepingPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum FolioStatus {
+  OPEN
+  SETTLED
+  CLOSED
+}
+
+enum ShiftStatus {
+  OPEN
+  CLOSED
+}
+
+enum TaskType {
+  CHECKOUT_CLEAN
+  STAY_CLEAN
+  DEEP_CLEAN
+  INSPECTION
+  MAINTENANCE
+}
+
+model Company {
+  id            String   @id @default(cuid())
+  name          String
+  registrationNo String
+  taxNumber     String?
+  ajpesId       String?
+  address       String?
+  city          String?
+  postalCode    String?
+  country       String   @default("SI")
+  phone         String?
+  email         String?
+  website       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  users       User[]
+  properties  Property[]
+  guests      Guest[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+  companyId    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id])
+  shifts          Shift[]
+  auditLogs       AuditLog[]
+  notifications   Notification[]
+  orders          Order[]
+  housekeepingTasks HousekeepingTask[]
+}
+
+model Property {
+  id         String   @id @default(cuid())
+  name       String
+  type       String
+  address    String?
+  city       String?
+  phone      String?
+  email      String?
+  checkInTime String  @default("14:00")
+  checkOutTime String @default("11:00")
+  companyId  String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  company     Company      @relation(fields: [companyId], references: [id])
+  rooms       Room[]
+  tables      Table[]
+  reservations Reservation[]
+  orders      Order[]
+  housekeepingTasks HousekeepingTask[]
+  seasons     Season[]
+  ratePlans   RatePlan[]
+}
+
+model Guest {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String?
+  phone         String?
+  nationality   String?
+  documentType  String?
+  documentNo    String?
+  dateOfBirth   DateTime?
+  gender        String?
+  address       String?
+  city          String?
+  country       String?
+  notes         String?
+  companyId     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  company       Company       @relation(fields: [companyId], references: [id])
+  reservations  Reservation[]
+  stays         Stay[]
+  folios        Folio[]
+  payments      Payment[]
+}
+
+model RoomType {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  maxAdults   Int      @default(2)
+  maxChildren Int      @default(0)
+  bedConfig   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rooms Room[]
+}
+
+model Room {
+  id              String     @id @default(cuid())
+  number          String
+  name            String?
+  status          RoomStatus @default(AVAILABLE)
+  floor           Int?
+  bedConfiguration String?
+  images          String[]
+  isActive        Boolean    @default(true)
+  propertyId      String
+  roomTypeId      String
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  property     Property     @relation(fields: [propertyId], references: [id])
+  roomType     RoomType     @relation(fields: [roomTypeId], references: [id])
+  reservations Reservation[]
+  stays        Stay[]
+  housekeepingTasks HousekeepingTask[]
+}
+
+model Season {
+  id         String   @id @default(cuid())
+  name       String
+  startDate  DateTime
+  endDate    DateTime
+  propertyId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  property   Property   @relation(fields: [propertyId], references: [id])
+  ratePlans  RatePlan[]
+}
+
+model RatePlan {
+  id         String   @id @default(cuid())
+  name       String
+  code       String
+  basePrice  Decimal
+  isActive   Boolean  @default(true)
+  propertyId String
+  seasonId   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  property     Property     @relation(fields: [propertyId], references: [id])
+  season       Season?      @relation(fields: [seasonId], references: [id])
+  reservations Reservation[]
+}
+
+model Reservation {
+  id             String            @id @default(cuid())
+  status         ReservationStatus @default(PENDING)
+  checkInDate    DateTime
+  checkOutDate   DateTime
+  nights         Int
+  adults         Int               @default(1)
+  children       Int               @default(0)
+  petCount       Int               @default(0)
+  totalAmount    Decimal
+  source         String?
+  guestNotes     String?
+  internalNotes  String?
+  specialRequests String[]
+  checkedInAt    DateTime?
+  checkedOutAt   DateTime?
+  propertyId     String
+  guestId        String
+  roomId         String
+  ratePlanId     String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  property  Property  @relation(fields: [propertyId], references: [id])
+  guest     Guest     @relation(fields: [guestId], references: [id])
+  room      Room      @relation(fields: [roomId], references: [id])
+  ratePlan  RatePlan  @relation(fields: [ratePlanId], references: [id])
+  stays     Stay[]
+  payments  Payment[]
+  folios    Folio[]
+}
+
+model Stay {
+  id            String   @id @default(cuid())
+  checkInDate   DateTime
+  checkOutDate  DateTime
+  adults        Int      @default(1)
+  children      Int      @default(0)
+  reservationId String
+  guestId       String
+  roomId        String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+  guest       Guest       @relation(fields: [guestId], references: [id])
+  room        Room        @relation(fields: [roomId], references: [id])
+}
+
+model MenuCategory {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  propertyId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  property Property   @relation(fields: [propertyId], references: [id])
+  items    MenuItem[]
+}
+
+model MenuItem {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  price         Decimal
+  costPrice     Decimal?
+  prepTime      Int?
+  allergens     String[]
+  kitchenStation String?
+  isActive      Boolean  @default(true)
+  categoryId    String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  category   MenuCategory @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+}
+
+model Table {
+  id         String   @id @default(cuid())
+  number     Int
+  name       String?
+  capacity   Int      @default(4)
+  status     String   @default("AVAILABLE")
+  diningArea String?
+  isActive   Boolean  @default(true)
+  propertyId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id])
+  orders   Order[]
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber String      @unique
+  status      OrderStatus @default(OPEN)
+  type        OrderType   @default(DINE_IN)
+  totalAmount Decimal     @default(0)
+  notes       String?
+  propertyId  String
+  tableId     String?
+  userId      String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  property  Property    @relation(fields: [propertyId], references: [id])
+  table     Table?      @relation(fields: [tableId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+  items     OrderItem[]
+  payments  Payment[]
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  quantity  Int      @default(1)
+  unitPrice Decimal
+  status    String   @default("PENDING")
+  notes     String?
+  orderId   String
+  menuItemId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order    Order    @relation(fields: [orderId], references: [id])
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  amount        Decimal
+  method        PaymentType
+  status        PaymentStatus @default(PAID)
+  notes         String?
+  guestId       String?
+  folioId       String?
+  orderId       String?
+  reservationId String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  guest       Guest?       @relation(fields: [guestId], references: [id])
+  folio       Folio?       @relation(fields: [folioId], references: [id])
+  order       Order?       @relation(fields: [orderId], references: [id])
+  reservation Reservation? @relation(fields: [reservationId], references: [id])
+}
+
+model Folio {
+  id            String      @id @default(cuid())
+  status        FolioStatus @default(OPEN)
+  totalCharges  Decimal     @default(0)
+  totalPayments Decimal     @default(0)
+  balance       Decimal     @default(0)
+  reservationId String
+  guestId       String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  reservation Reservation    @relation(fields: [reservationId], references: [id])
+  guest       Guest          @relation(fields: [guestId], references: [id])
+  lineItems   FolioLineItem[]
+  payments    Payment[]
+}
+
+model FolioLineItem {
+  id          String   @id @default(cuid())
+  description String
+  amount      Decimal
+  category    String
+  referenceId String?
+  folioId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  folio Folio @relation(fields: [folioId], references: [id])
+}
+
+model HousekeepingTask {
+  id           String             @id @default(cuid())
+  type         TaskType
+  priority     HousekeepingPriority @default(MEDIUM)
+  status       HousekeepingStatus @default(PENDING)
+  guestName    String?
+  checkoutTime DateTime?
+  notes        String?
+  propertyId   String
+  roomId       String
+  userId       String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id])
+  room     Room     @relation(fields: [roomId], references: [id])
+  assignedTo User?  @relation(fields: [userId], references: [id])
+}
+
+model CashRegister {
+  id         String   @id @default(cuid())
+  name       String
+  isActive   Boolean  @default(true)
+  propertyId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  shifts Shift[]
+}
+
+model Shift {
+  id              String     @id @default(cuid())
+  status          ShiftStatus @default(OPEN)
+  openingBalance  Decimal    @default(0)
+  closingBalance  Decimal?
+  cashSales       Decimal    @default(0)
+  cardSales       Decimal    @default(0)
+  discrepancy     Decimal?
+  openedAt        DateTime   @default(now())
+  closedAt        DateTime?
+  cashRegisterId  String
+  userId          String
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  cashRegister CashRegister @relation(fields: [cashRegisterId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String?
+  oldValues Json?
+  newValues Json?
+  ipAddress String?
+  userAgent String?
+  userId    String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  userId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+}
