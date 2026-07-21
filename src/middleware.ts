@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-const publicRoutes = ["/auth/login", "/auth/register"]
+const publicPaths = ["/auth/login", "/auth/register"]
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (publicRoutes.includes(pathname)) {
+  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/socketio")) {
+    return NextResponse.next()
+  }
+
+  if (publicPaths.includes(pathname)) {
+    if (request.cookies.get("authjs.session-token") || request.cookies.get("__Secure-authjs.session-token")) {
+      return NextResponse.redirect(new URL("/", request.url))
+    }
     return NextResponse.next()
   }
 
@@ -24,5 +31,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/socketio|public).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|public).*)"],
 }
