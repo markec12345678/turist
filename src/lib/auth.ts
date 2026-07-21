@@ -1,12 +1,10 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import { PrismaAdapter } from "@auth/prisma-adapter"
 import { compare } from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.AUTH_SECRET,
-  adapter: PrismaAdapter(prisma),
+  secret: process.env.AUTH_SECRET || "turist-dev-secret-key-change-in-production",
   providers: [
     Credentials({
       credentials: {
