@@ -44,6 +44,7 @@ model User {
   notifications   Notification[]
   orders          Order[]
   housekeepingTasks HousekeepingTask[]
+  stockMovements  StockMovement[]
 }
 
 model Property {
@@ -71,6 +72,8 @@ model Property {
   housekeepingTasks HousekeepingTask[]
   seasons     Season[]
   ratePlans   RatePlan[]
+  inventoryCategories InventoryCategory[]
+  ingredients Ingredient[]
 }
 
 model Guest {
@@ -242,6 +245,7 @@ model MenuItem {
 
   category   MenuCategory @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
+  menuItemIngredients MenuItemIngredient[]
 }
 
 model Table {
@@ -392,6 +396,67 @@ model Shift {
 
   cashRegister CashRegister @relation(fields: [cashRegisterId], references: [id])
   user         User         @relation(fields: [userId], references: [id])
+}
+
+model InventoryCategory {
+  id          String   @id @default(cuid())
+  name        String
+  sortOrder   Int      @default(0)
+  propertyId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  property   Property     @relation(fields: [propertyId], references: [id])
+  ingredients Ingredient[]
+}
+
+model Ingredient {
+  id              String   @id @default(cuid())
+  name            String
+  unit            String   @default("KG")
+  currentStock    Decimal  @default(0)
+  minStock        Decimal  @default(0)
+  costPerUnit     Decimal  @default(0)
+  isActive        Boolean  @default(true)
+  categoryId      String?
+  propertyId      String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  category        InventoryCategory? @relation(fields: [categoryId], references: [id])
+  property        Property           @relation(fields: [propertyId], references: [id])
+  movements       StockMovement[]
+  menuItemIngredients MenuItemIngredient[]
+}
+
+model StockMovement {
+  id             String   @id @default(cuid())
+  type           String
+  quantity       Decimal
+  unitCost       Decimal?
+  notes          String?
+  referenceType  String?
+  referenceId    String?
+  ingredientId   String
+  userId         String?
+  createdAt      DateTime @default(now())
+
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+  user       User?      @relation(fields: [userId], references: [id])
+
+  @@index([ingredientId, createdAt])
+}
+
+model MenuItemIngredient {
+  id           String  @id @default(cuid())
+  quantity     Decimal
+  menuItemId   String
+  ingredientId String
+
+  menuItem   MenuItem   @relation(fields: [menuItemId], references: [id])
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@unique([menuItemId, ingredientId])
 }
 
 model AuditLog {

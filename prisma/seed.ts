@@ -14,6 +14,10 @@ async function main() {
   console.log("🌱 Seeding demo data...\n")
 
   console.log("🗑️  Deleting existing data...")
+  await prisma.stockMovement.deleteMany()
+  await prisma.menuItemIngredient.deleteMany()
+  await prisma.ingredient.deleteMany()
+  await prisma.inventoryCategory.deleteMany()
   await prisma.notification.deleteMany()
   await prisma.auditLog.deleteMany()
   await prisma.folioLineItem.deleteMany()
@@ -183,6 +187,29 @@ async function main() {
     await prisma.table.create({ data: { number: num, capacity: cap, diningArea: "Jedilnica", propertyId: property.id } })
   }
   console.log("   ✅ 10 tables\n")
+
+  console.log("📦 Creating inventory...")
+  const catMesni = await prisma.inventoryCategory.create({ data: { name: "Mesni izdelki", sortOrder: 0, propertyId: property.id } })
+  const catZelenjava = await prisma.inventoryCategory.create({ data: { name: "Zelenjava", sortOrder: 1, propertyId: property.id } })
+  const catMlecni = await prisma.inventoryCategory.create({ data: { name: "Mlečni izdelki", sortOrder: 2, propertyId: property.id } })
+  const catOstalo = await prisma.inventoryCategory.create({ data: { name: "Ostalo", sortOrder: 3, propertyId: property.id } })
+
+  const ingredients = [
+    { name: "Piščančje prsi", unit: "KG", currentStock: 8, minStock: 3, costPerUnit: 8.5, categoryId: catMesni.id },
+    { name: "Govedji steak", unit: "KG", currentStock: 5, minStock: 2, costPerUnit: 18, categoryId: catMesni.id },
+    { name: "Paradajz", unit: "KG", currentStock: 12, minStock: 4, costPerUnit: 2.5, categoryId: catZelenjava.id },
+    { name: "Solata", unit: "KG", currentStock: 6, minStock: 3, costPerUnit: 3.2, categoryId: catZelenjava.id },
+    { name: "Krompir", unit: "KG", currentStock: 15, minStock: 5, costPerUnit: 1.2, categoryId: catZelenjava.id },
+    { name: "Mocarela", unit: "KG", currentStock: 2, minStock: 1, costPerUnit: 9, categoryId: catMlecni.id },
+    { name: "Sladka smetana", unit: "L", currentStock: 4, minStock: 2, costPerUnit: 3.5, categoryId: catMlecni.id },
+    { name: "Jajca", unit: "KOS", currentStock: 60, minStock: 20, costPerUnit: 0.35, categoryId: catMlecni.id },
+    { name: "Moka", unit: "KG", currentStock: 10, minStock: 3, costPerUnit: 1.1, categoryId: catOstalo.id },
+    { name: "Olive oil", unit: "L", currentStock: 3, minStock: 1, costPerUnit: 7, categoryId: catOstalo.id },
+    { name: "Nutella", unit: "KG", currentStock: 1.5, minStock: 0.5, costPerUnit: 12, categoryId: catOstalo.id },
+    { name: "Beluši", unit: "KG", currentStock: 1, minStock: 1.5, costPerUnit: 6, categoryId: catZelenjava.id },
+  ]
+  for (const ing of ingredients) await prisma.ingredient.create({ data: ing })
+  console.log("   ✅ 4 categories, 12 ingredients\n")
 
   console.log("💵 Creating cash register...")
   await prisma.cashRegister.create({ data: { name: "Glavna blagajna", propertyId: property.id } })
