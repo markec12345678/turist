@@ -12,9 +12,9 @@ function Popover({ children, open: controlledOpen, onOpenChange }: { children: R
   return <PopoverContext.Provider value={{ open, setOpen }}><div className="relative inline-block">{children}</div></PopoverContext.Provider>
 }
 
-function PopoverTrigger({ children, className, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+function PopoverTrigger({ children, className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   const { open, setOpen } = React.useContext(PopoverContext)
-  return <button className={cn(className)} onClick={() => setOpen(!open)} {...props}>{children}</button>
+  return <div className={cn("cursor-pointer", className)} onClick={() => setOpen(!open)} role="button" {...props}>{children}</div>
 }
 
 function PopoverContent({ children, className, align = "center", ...props }: { align?: "start" | "center" | "end" } & React.HTMLAttributes<HTMLDivElement>) {
