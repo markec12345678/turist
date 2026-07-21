@@ -14,6 +14,10 @@ async function main() {
   console.log("🌱 Seeding demo data...\n")
 
   console.log("🗑️  Deleting existing data...")
+  await prisma.orderItemModifier.deleteMany()
+  await prisma.menuItemModifier.deleteMany()
+  await prisma.orderVoidLog.deleteMany()
+  await prisma.tip.deleteMany()
   await prisma.stockMovement.deleteMany()
   await prisma.menuItemIngredient.deleteMany()
   await prisma.ingredient.deleteMany()
@@ -173,14 +177,30 @@ async function main() {
   })
 
   const menuItems = [
-    { name: "Šopska solata", price: 8.5, allergens: JSON.stringify(["mleko"]), categoryId: predjedi.id, kitchenStation: "BAR" },
+    { name: "Šopska solata", price: 8.5, allergens: JSON.stringify(["mleko"]), categoryId: predjedi.id, kitchenStation: "HLADNO" },
     { name: "Rezanci po tržaško", price: 14.9, allergens: JSON.stringify(["gluten"]), categoryId: glavneJedi.id, kitchenStation: "TOPLOTNO" },
     { name: "Ljubljanski zrezek", price: 18.5, allergens: JSON.stringify([]), categoryId: glavneJedi.id, kitchenStation: "TOPLOTNO" },
     { name: "Palačinke z Nutello", price: 7.5, allergens: JSON.stringify(["jajca", "mleko", "gluten"]), categoryId: sladice.id, kitchenStation: "SLADICE" },
     { name: "Kremšnita", price: 6.9, allergens: JSON.stringify(["jajca", "mleko", "gluten"]), categoryId: sladice.id, kitchenStation: "SLADICE" },
   ]
-  for (const item of menuItems) await prisma.menuItem.create({ data: item })
+  const createdItems = []
+  for (const item of menuItems) {
+    const created = await prisma.menuItem.create({ data: item })
+    createdItems.push(created)
+  }
   console.log("   ✅ 3 categories, 5 items\n")
+
+  console.log("🧂 Creating modifiers...")
+  const modifierData = [
+    { name: "Extra sir", priceAdj: 1.5, menuItemId: createdItems[1].id },
+    { name: "Brez čebule", priceAdj: 0, menuItemId: createdItems[1].id },
+    { name: "Pol porcije", priceAdj: -3, menuItemId: createdItems[2].id },
+    { name: "Extra omaka", priceAdj: 1, menuItemId: createdItems[2].id },
+    { name: "Extra Nutella", priceAdj: 1.5, menuItemId: createdItems[3].id },
+    { name: "Smeltana", priceAdj: 0.8, menuItemId: createdItems[4].id },
+  ]
+  for (const m of modifierData) await prisma.menuItemModifier.create({ data: m })
+  console.log("   ✅ 6 modifiers\n")
 
   console.log("🪑 Creating tables...")
   for (const [num, cap] of [[1,4],[2,4],[3,4],[4,4],[5,6],[6,6],[7,6],[8,8],[9,8],[10,8]] as [number, number][]) {

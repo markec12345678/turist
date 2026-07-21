@@ -7,6 +7,7 @@ import {
   LayoutDashboard, CalendarDays, CalendarRange, Users, BedDouble,
   UtensilsCrossed, CreditCard, Settings, LogOut, Building2, ClipboardList,
   Monitor, Armchair, BarChart3, Clock, FileText, Package, BarChart,
+  Smartphone, Percent,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -23,11 +24,12 @@ const navigation = [
     name: "Restavracija", href: "/restaurant", icon: UtensilsCrossed,
     children: [
       { name: "Meni", href: "/restaurant/menu", icon: ClipboardList },
+      { name: "POS Terminal", href: "/restaurant/pos", icon: CreditCard },
       { name: "Naročila", href: "/restaurant/orders", icon: UtensilsCrossed },
       { name: "KOT Zaslon", href: "/restaurant/kot", icon: Monitor },
       { name: "Mize", href: "/restaurant/tables", icon: Armchair },
-      { name: "POS Terminal", href: "/restaurant/pos", icon: CreditCard },
       { name: "Inventar", href: "/restaurant/inventory", icon: Package },
+      { name: "Izmene", href: "/restaurant/shifts", icon: Clock },
       { name: "Dnevno poročilo", href: "/restaurant/reports/daily", icon: BarChart },
     ],
   },

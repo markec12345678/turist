@@ -45,6 +45,7 @@ model User {
   orders          Order[]
   housekeepingTasks HousekeepingTask[]
   stockMovements  StockMovement[]
+  tips            Tip[]
 }
 
 model Property {
@@ -246,6 +247,7 @@ model MenuItem {
   category   MenuCategory @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
   menuItemIngredients MenuItemIngredient[]
+  modifiers  MenuItemModifier[]
 }
 
 model Table {
@@ -265,38 +267,53 @@ model Table {
 }
 
 model Order {
-  id          String   @id @default(cuid())
-  orderNumber String   @unique
-  status      String   @default("OPEN")
-  type        String   @default("DINE_IN")
-  totalAmount Decimal  @default(0)
-  notes       String?
-  propertyId  String
-  tableId     String?
-  userId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  orderNumber    String   @unique
+  status         String   @default("OPEN")
+  type           String   @default("DINE_IN")
+  subtotal       Decimal  @default(0)
+  discountAmount Decimal  @default(0)
+  discountType   String?
+  discountValue  Decimal?
+  tipAmount      Decimal  @default(0)
+  totalAmount    Decimal  @default(0)
+  notes          String?
+  voidedAt       DateTime?
+  voidedBy       String?
+  voidReason     String?
+  propertyId     String
+  tableId        String?
+  userId         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  property  Property    @relation(fields: [propertyId], references: [id])
-  table     Table?      @relation(fields: [tableId], references: [id])
-  user      User        @relation(fields: [userId], references: [id])
-  items     OrderItem[]
-  payments  Payment[]
+  property     Property      @relation(fields: [propertyId], references: [id])
+  table        Table?        @relation(fields: [tableId], references: [id])
+  user         User          @relation(fields: [userId], references: [id])
+  items        OrderItem[]
+  payments     Payment[]
+  tips         Tip[]
+  voidLogs     OrderVoidLog[]
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
-  quantity  Int      @default(1)
-  unitPrice Decimal
-  status    String   @default("PENDING")
-  notes     String?
-  orderId   String
-  menuItemId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  quantity      Int      @default(1)
+  unitPrice     Decimal
+  discountType  String?
+  discountValue Decimal?
+  lineTotal     Decimal  @default(0)
+  status        String   @default("PENDING")
+  notes         String?
+  voidedAt      DateTime?
+  orderId       String
+  menuItemId    String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  order    Order    @relation(fields: [orderId], references: [id])
-  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+  order          Order              @relation(fields: [orderId], references: [id])
+  menuItem       MenuItem           @relation(fields: [menuItemId], references: [id])
+  modifiers      OrderItemModifier[]
 }
 
 model Payment {
@@ -304,6 +321,8 @@ model Payment {
   amount        Decimal
   method        String
   status        String   @default("PAID")
+  isRefund      Boolean  @default(false)
+  refundReason  String?
   notes         String?
   guestId       String?
   folioId       String?
@@ -316,6 +335,55 @@ model Payment {
   folio       Folio?       @relation(fields: [folioId], references: [id])
   order       Order?       @relation(fields: [orderId], references: [id])
   reservation Reservation? @relation(fields: [reservationId], references: [id])
+}
+
+model Tip {
+  id        String   @id @default(cuid())
+  amount    Decimal
+  method    String
+  orderId   String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+  user  User? @relation(fields: [userId], references: [id])
+}
+
+model OrderVoidLog {
+  id        String   @id @default(cuid())
+  type      String
+  reason    String
+  amount    Decimal?
+  orderId   String
+  orderItemId String?
+  voidedBy  String
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model MenuItemModifier {
+  id          String   @id @default(cuid())
+  name        String
+  priceAdj    Decimal  @default(0)
+  isActive    Boolean  @default(true)
+  menuItemId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  menuItem       MenuItem           @relation(fields: [menuItemId], references: [id])
+  orderModifiers OrderItemModifier[]
+}
+
+model OrderItemModifier {
+  id            String @id @default(cuid())
+  orderItemId   String
+  modifierId    String
+  name          String
+  priceAdj      Decimal @default(0)
+
+  orderItem OrderItem       @relation(fields: [orderItemId], references: [id])
+  modifier  MenuItemModifier @relation(fields: [modifierId], references: [id])
 }
 
 model Folio {
