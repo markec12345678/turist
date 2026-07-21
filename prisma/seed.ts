@@ -162,11 +162,11 @@ async function main() {
   })
 
   const menuItems = [
-    { name: "Šopska solata", price: 8.5, allergens: ["mleko"], categoryId: predjedi.id, kitchenStation: "BAR" },
-    { name: "Rezanci po tržaško", price: 14.9, allergens: ["gluten"], categoryId: glavneJedi.id, kitchenStation: "TOPLOTNO" },
-    { name: "Ljubljanski zrezek", price: 18.5, allergens: [] as string[], categoryId: glavneJedi.id, kitchenStation: "TOPLOTNO" },
-    { name: "Palačinke z Nutello", price: 7.5, allergens: ["jajca", "mleko", "gluten"], categoryId: sladice.id, kitchenStation: "SLADICE" },
-    { name: "Kremšnita", price: 6.9, allergens: ["jajca", "mleko", "gluten"], categoryId: sladice.id, kitchenStation: "SLADICE" },
+    { name: "Šopska solata", price: 8.5, allergens: JSON.stringify(["mleko"]), categoryId: predjedi.id, kitchenStation: "BAR" },
+    { name: "Rezanci po tržaško", price: 14.9, allergens: JSON.stringify(["gluten"]), categoryId: glavneJedi.id, kitchenStation: "TOPLOTNO" },
+    { name: "Ljubljanski zrezek", price: 18.5, allergens: JSON.stringify([]), categoryId: glavneJedi.id, kitchenStation: "TOPLOTNO" },
+    { name: "Palačinke z Nutello", price: 7.5, allergens: JSON.stringify(["jajca", "mleko", "gluten"]), categoryId: sladice.id, kitchenStation: "SLADICE" },
+    { name: "Kremšnita", price: 6.9, allergens: JSON.stringify(["jajca", "mleko", "gluten"]), categoryId: sladice.id, kitchenStation: "SLADICE" },
   ]
   for (const item of menuItems) await prisma.menuItem.create({ data: item })
   console.log("   ✅ 3 categories, 5 items\n")

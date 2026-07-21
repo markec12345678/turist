@@ -1,7 +1,6 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import type { Prisma } from "@prisma/client"
 
 export interface AuditEvent {
   userId?: string
@@ -22,8 +21,8 @@ export async function logAudit(event: AuditEvent) {
         action: event.action,
         entity: event.entity,
         entityId: event.entityId,
-        oldValues: (event.oldValues as Prisma.InputJsonValue) || undefined,
-        newValues: (event.newValues as Prisma.InputJsonValue) || undefined,
+        oldValues: event.oldValues ? JSON.stringify(event.oldValues) : undefined,
+        newValues: event.newValues ? JSON.stringify(event.newValues) : undefined,
         ipAddress: event.ipAddress,
         userAgent: event.userAgent,
       },

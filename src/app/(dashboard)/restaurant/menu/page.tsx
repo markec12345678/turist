@@ -36,7 +36,7 @@ export default function MenuPage() {
                     <TableRow key={item.id}>
                       <TableCell>{item.name}</TableCell>
                       <TableCell>€{Number(item.price).toFixed(2)}</TableCell>
-                      <TableCell>{(item.allergens || []).join(", ") || "-"}</TableCell>
+                      <TableCell>{(item.allergens ? JSON.parse(item.allergens) : []).join(", ") || "-"}</TableCell>
                       <TableCell><Badge variant="outline">{item.kitchenStation || "-"}</Badge></TableCell>
                     </TableRow>
                   ))}

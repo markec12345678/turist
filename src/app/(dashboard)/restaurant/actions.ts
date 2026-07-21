@@ -25,7 +25,7 @@ export async function getMenuItems(propertyId?: string) {
 }
 
 export async function createMenuItem(data: { name: string; description?: string; price: number; costPrice?: number; prepTime?: number; allergens?: string[]; kitchenStation?: string; categoryId: string }) {
-  const item = await prisma.menuItem.create({ data: { ...data, allergens: data.allergens || [] } })
+  const item = await prisma.menuItem.create({ data: { ...data, allergens: JSON.stringify(data.allergens || []) } })
   revalidatePath("/restaurant/menu")
   return item
 }
