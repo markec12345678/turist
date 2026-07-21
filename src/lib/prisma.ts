@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { PrismaBetterSQLite3 } from "@prisma/adapter-better-sqlite3"
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3"
 import path from "node:path"
 
 const globalForPrisma = globalThis as unknown as {
@@ -8,7 +8,7 @@ const globalForPrisma = globalThis as unknown as {
 
 function createClient() {
   const dbPath = path.join(process.cwd(), "prisma", "dev.db")
-  const adapter = new PrismaBetterSQLite3({ url: `file:${dbPath}` })
+  const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` })
   return new PrismaClient({ adapter })
 }
 
